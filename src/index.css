@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+@layer {
+    .glass {
+        @apply
+        bg-cyan-900/10
+        border
+        border-stone-500
+        backdrop-blur-xl
+    }
+}
