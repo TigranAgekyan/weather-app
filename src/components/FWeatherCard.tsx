@@ -16,7 +16,10 @@ import {
 
 import { FaPerson } from 'react-icons/fa6'
 
+import { FaWind } from "react-icons/fa";
+
 import type { IconType } from "react-icons";
+import LoadingAnimation from "./SLoadingAnimation";
 
 // ─── Icon Mapping ─────────────────────────────────────────────────────────────
 
@@ -51,14 +54,16 @@ const iconMap: Record<string, IconType> = {
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface WeatherCardProps {
-  day: string; // Day name to display e.g. "Today", "Monday"
+  day: string | null; // Day name to display e.g. "Today", "Monday"
   icon: string; // OWM icon code e.g. "01d", "10n" — used to pick the right icon
-  rainChance: number; // Probability of precipitation as a percentage (0–100)
-  temperature: number;
+  rainChance: number | null; // Probability of precipitation as a percentage (0–100)
+  temperature: number | null;
   today: boolean; // Controls the card's size and style — today's card is taller
-  description?: string; // Optional text description of the weather (not currently used)
-  realFeel?: number; // Optional "feels like" temperature in °C (not currently used)
-  humidity?: number; // Optional humidity percentage (not currently used)
+  description?: string | null; // Optional text description of the weather (not currently used)
+  realFeel?: number | null; // Optional "feels like" temperature in °C (not currently used)
+  humidity?: number | null; // Optional humidity percentage (not currently used)
+  wind?: number | null; // Optional wind information as a string (not currently used)
+  units?: "Imperial" | "Metric"; // Optional units for temperature and wind (e.g. "°C", "km/h")
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
@@ -81,15 +86,15 @@ const WeatherCard: FC<WeatherCardProps> = ({
   description,
   realFeel,
   humidity,
+  wind,
+  units,
 }) => {
   // Extract the 2-digit numeric prefix from the icon code e.g. "10d" → "10"
   const WeatherIcon = iconMap[icon.slice(0, 2)] ?? TiWeatherCloudy;
 
   return (
     <div
-      className={`flex flex-col w-[20%] justify-evenly items-center glass-inner rounded-xl p-8 gap-4 drop-shadow-xl ${
-        today ? styleStates[0] : styleStates[1]
-      }`}
+      className={`flex flex-col w-[20%] justify-evenly items-center glass-inner rounded-xl p-8 gap-4 drop-shadow-xl ${today ? styleStates[0] : styleStates[1]}`}
     >
       {/* Weather icon — mapped from OWM icon code */}
       <WeatherIcon size={48} />
@@ -97,26 +102,29 @@ const WeatherCard: FC<WeatherCardProps> = ({
       {/*Day Label & Weather Description Wrapper*/}
       <div className="flex flex-col items-center">
         {/* Day label — e.g. "Today", "Monday" */}
-        <span className="text-3xl font-semibold">{day}</span>
+        <span className="text-3xl font-semibold">{day != null ? day:<LoadingAnimation/>}</span>
         
         {/*Weather Desciptio — e.g "Light Rain"*/}
-        <span className="text-xl capitalize"> {description} </span>
+        <span className="text-xl capitalize"> {description != null ? description:<LoadingAnimation/>} </span>
       </div>
 
       {/*Temperature & "Feels Like" & Humidity Wrapper*/}
       <div className="flex flex-col items-center">
         {/* Temperature in °C — rounded to a whole number before being passed in */}
-        <span className="text-5xl font-semibold">{temperature}°</span>
+        <span className="text-5xl font-semibold mb-2 p-2 border-b border-stone-500">{temperature != null ? temperature:<LoadingAnimation/>} <span className="font-light text-4xl">{units == ("Metric") ? "C":"F"}°</span> </span>
         
         {/*Humidity*/}
-        <span className="text-xl flex flex-row place-content-center items-center gap-1"> <WiHumidity/> Humidity: {realFeel} </span>
+        <span className="text-xl flex flex-row place-content-center items-center gap-1"> <WiHumidity/> Humidity: {humidity != null ? humidity:<LoadingAnimation/>} </span>
         
         {/*Real Feel*/}
-        <span className="text-xl flex flex-row place-content-center items-center gap-1"><FaPerson/> Feels Like: {realFeel} </span>
+        <span className="text-xl flex flex-row place-content-center items-center gap-1"><FaPerson /> Feels Like: {realFeel != null ? realFeel:<LoadingAnimation/>}° </span>
+        
+        {/* Wind */}
+        <span className="text-xl flex flex-row place-content-center items-center gap-1"> <FaWind/> {wind != null ? wind:<LoadingAnimation/>}  {units == ("Metric") ? "km/h":"m/h"} </span>
       </div>
       
       {/* Chance of rain as a percentage */}
-      <span className="text-xl">Rain: {rainChance}%</span>
+      <span className="text-xl">Rain: {rainChance != null ? rainChance:<LoadingAnimation/>}%</span>
       
     </div>
   );

@@ -6,6 +6,8 @@
         @apply
         font-Advent-Pro
         text-stone-300
+        cursor-default
+        select-none
     }
     
     .glass {
@@ -14,6 +16,18 @@
         border
         border-stone-500
         backdrop-blur-xl
+    }
+    
+    .glass-hover:hover {
+        @apply
+        bg-cyan-900/20
+        border-stone-300
+    }
+    
+    .glass-hover:focus {
+        @apply
+        bg-cyan-900/20
+        border-stone-300
     }
 }
 

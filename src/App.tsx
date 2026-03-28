@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import RainyBG from "./assets/wp8997310-1404774826.jpg";
-import WeatherCard from "./components/WeatherCard";
+import WeatherCard from "./components/FWeatherCard";
 import type { WeatherData, ForecastItem } from "./types";
+import { AnimatePresence, motion } from 'motion/react';
+import Cookies from 'js-cookie';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -58,7 +60,7 @@ const App = () => {
   const [isSearching, setIsSearching] = useState<boolean>(false);
 
   // The raw text value of the search input, used to trigger the geocoding fetch
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(Cookies.get("lastSearch") || ""); // Initialize with last search from cookie if available 
 
   // The list of city suggestions returned by the Geocoding API
   const [results, setResults] = useState<City[]>([]);
@@ -67,7 +69,10 @@ const App = () => {
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
 
   // The full 5-day forecast response from the OpenWeatherMap Forecast API
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [weatherData, setWeatherData] = useState<WeatherData | null | "Loading">(null);
+  
+  //The units in which the Temperature and the wind speed will be displayed. Default is Metric
+  const [selectedUnits, setSelectedUnits] = useState<"Metric" | "Imperial">("Metric");
 
   // ─── Geocoding Fetch (debounced) ───────────────────────────────────────────
 
@@ -75,6 +80,7 @@ const App = () => {
     // Debounce: wait 500ms after the user stops typing before making the API call
     // This prevents a request firing on every single keystroke
     const timer = setTimeout(async () => {
+      
       if (!query.trim()) {
         setResults([]);
         return;
@@ -85,6 +91,7 @@ const App = () => {
       );
       const data = await res.json();
       setResults(data);
+      Cookies.set("lastSearch", query, { expires: 7 }); // Store the last search query in a cookie for 7 days
     }, 500);
 
     // Cleanup: if the user types again before 500ms, cancel the previous timer
@@ -97,17 +104,19 @@ const App = () => {
     const fetchWeather = async () => {
       // Do nothing until the user has selected a city from the dropdown
       if (!selectedCity) return;
+      
+      setWeatherData("Loading"); // Clear previous weather data while loading new data
 
       // The Forecast API requires lat/lon, which we got from the Geocoding API
       const res = await fetch(
-        `https://api.openweathermap.org/data/2.5/forecast?lat=${selectedCity.lat}&lon=${selectedCity.lon}&units=metric&appid=${import.meta.env.VITE_WEATHER_API_KEY}`,
+        `https://api.openweathermap.org/data/2.5/forecast?lat=${selectedCity.lat}&lon=${selectedCity.lon}&units=${selectedUnits}&appid=${import.meta.env.VITE_WEATHER_API_KEY}`,
       );
       const data = await res.json();
       setWeatherData(data);
     };
 
     fetchWeather();
-  }, [selectedCity]); // Re-runs whenever the user selects a different city
+  }, [selectedCity, selectedUnits]); // Re-runs whenever the user selects a different city
 
   // ─── Handlers ──────────────────────────────────────────────────────────────
 
@@ -127,82 +136,185 @@ const App = () => {
 
       <div className="z-10 flex flex-col w-full h-full place-content-center items-center gap-8 text-stone-100">
         {/* Blackout overlay — shown while the search input is focused */}
-        {isSearching && (
-          <div
-            id="blackout"
-            className="w-screen h-screen bg-radial from-black/10 to-black/80 backdrop-blur-sm absolute z-50"
-          />
-        )}
-
-        {/* Search wrapper — `relative` is needed to anchor the dropdown */}
-        <div className="relative z-60">
-          <input
-            onFocus={() => setIsSearching(true)}
-            // Delay hiding the dropdown so onMouseDown on a result fires first
-            onBlur={() => setTimeout(() => setIsSearching(false), 150)}
-            type="search"
-            placeholder="Search Cities"
-            className="text-center px-1 py-2 rounded-full focus:outline-none transition-all glass drop-shadow-lg font-semibold"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-
-          {/* Dropdown — only visible when there are results and input is focused */}
-          {results.length > 0 && isSearching && (
-            <ul className="absolute top-full mt-2 w-full min-w-50 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-md rounded-2xl shadow-lg overflow-hidden">
-              {results.map((city, i) => (
-                <li
-                  key={i}
-                  // onMouseDown fires before onBlur, so the click registers
-                  // before the dropdown disappears
-                  onMouseDown={() => handleSelectCity(city)}
-                  className="px-4 py-2 text-stone-100 font-semibold hover:bg-white/20 cursor-pointer transition-colors"
-                >
-                  {city.name}
-                  {city.state ? `, ${city.state}` : ""}, {city.country}
-                </li>
-              ))}
-            </ul>
+        <AnimatePresence>
+          {isSearching && (
+            <motion.div
+              id="blackout"
+              className="w-screen h-screen bg-radial from-black/10 to-black/80 backdrop-blur-sm absolute z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            />
           )}
+        </AnimatePresence>
+        
+        <div className="flex flex-row gap-4">
+          {/* Search wrapper — `relative` is needed to anchor the dropdown */}
+          <div className="relative z-60">
+            {/* Search input element */}
+            <motion.input
+              onFocus={() => setIsSearching(true)}
+              // Delay hiding the dropdown so onMouseDown on a result fires first
+              onBlur={() => setTimeout(() => setIsSearching(false), 150)}
+              type="search"
+              placeholder="Search Cities"
+              className="text-center px-1 py-2 rounded-full focus:outline-none transition-colors glass glass-hover drop-shadow-lg font-semibold"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            />
+  
+            {/* Dropdown — only visible when there are results and input is focused */}
+            {results.length > 0 && isSearching && (
+              <motion.ul
+                className="absolute top-full mt-2 w-full min-w-50 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-md rounded-2xl shadow-lg overflow-hidden"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                {results.map((city, i) => (
+                  <li
+                    key={i}
+                    // onMouseDown fires before onBlur, so the click registers
+                    // before the dropdown disappears
+                    onMouseDown={() => handleSelectCity(city)}
+                    className="px-4 py-2 text-stone-100 font-semibold hover:bg-white/20 cursor-pointer transition-colors"
+                  >
+                    {city.name}
+                    {city.state ? `, ${city.state}` : ""}, {city.country}
+                  </li>
+                ))}
+              </motion.ul>
+            )}
+          </div>
+          
+          {/* Temperature Units Selection */}
+          <motion.div
+            className="flex flex-row w-[5vw] place-content-center items-center gap-8 text-stone-100 font-semibold glass glass-hover transition-colors rounded-full px-4 py-2"
+            onClick={() => setSelectedUnits(selectedUnits === "Metric" ? "Imperial" : "Metric")}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <span className="flex place-content-center items-center">
+              <AnimatePresence>
+                {
+                  selectedUnits === "Metric" ? (
+                    <motion.span
+                      key="C"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.2 }}
+                      className="fixed"
+                    >
+                      Metric
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="F"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                        transition={{ duration: 0.2 }}
+                        className="fixed"
+                    >
+                      Imperial
+                    </motion.span>
+                  )
+                }
+              </AnimatePresence>
+            </span>
+          </motion.div>
         </div>
 
         {/* Weather cards row */}
-        <div className="w-full h-full flex flex-row justify-between items-center rounded-2xl drop-shadow-2xl glass p-8 gap-8">
-          {weatherData
-            ? // City selected: render one card per day using real forecast data
-              getDailyForecasts(weatherData.list).map((item, i) => (
-                <WeatherCard
-                  key={item.dt}
-                  day={getDayName(item.dt, i === 0)}
-                  icon={item.weather[0].icon}
-                  rainChance={Math.round(item.pop * 100)} // pop is 0–1, convert to percentage
-                  temperature={Math.round(item.main.temp)}
-                  today={i === 0}
-                  description={item.weather[0].description} // Optional: show weather description
-                  realFeel={Math.round(item.main.feels_like)} // Optional: show "feels like" temperature
-                  humidity={item.main.humidity} // Optional: show humidity percentage
-                />
-              ))
-            : // No city selected yet: render 5 empty placeholder cards
-              Array(5)
-                .fill(0)
-                .map((_, i) => (
-                  <WeatherCard
-                    key={i}
-                    day={i === 0 ? "Today" : "---"}
-                    icon="01d"
-                    rainChance={0}
-                    temperature={0}
-                    today={i === 0}
-                    description={"Weather Description"}
-                    realFeel={0}
-                    humidity={0}
-                  />
-                ))}
-        </div>
+        <motion.div
+          className="w-full h-full flex flex-row place-content-center items-center rounded-2xl drop-shadow-2xl glass p-8 gap-8"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          {
+            weatherData === null
+              ? (<span className="text-3xl"> Select A City</span>)
+              : weatherData === "Loading"
+                ? (Array(5)
+                      .fill(0)
+                      .map((_, i) => (
+                        <WeatherCard
+                          key={i}
+                          day={i === 0 ? "Today" : null}
+                          icon="01d"
+                          rainChance={null}
+                          temperature={null}
+                          today={i === 0}
+                          description={null}
+                          realFeel={null}
+                          humidity={null}
+                          wind={null}
+                          units={selectedUnits}
+                        />)))
+                        : (getDailyForecasts(weatherData.list).map((item, i) => (
+                          <WeatherCard
+                            key={item.dt}
+                            day={getDayName(item.dt, i === 0)}
+                            icon={item.weather[0].icon}
+                            rainChance={Math.round(item.pop * 100)} // pop is 0–1, convert to percentage
+                            temperature={Math.round(item.main.temp)}
+                            today={i === 0}
+                            description={item.weather[0].description} // Optional: show weather description
+                            realFeel={Math.round(item.main.feels_like)} // Optional: show "feels like" temperature
+                            humidity={item.main.humidity} // Optional: show humidity percentage
+                            wind={item.wind.speed} // Optional: show wind speed
+                            units={selectedUnits} // Pass the selected units to the card for proper display
+                          />)))
+          }
+        </motion.div>
       </div>
     </div>
   );
 };
 
 export default App;
+
+
+// {weatherData
+//   ? // City selected: render one card per day using real forecast data
+    // getDailyForecasts(weatherData.list).map((item, i) => (
+    //   <WeatherCard
+    //     key={item.dt}
+    //     day={getDayName(item.dt, i === 0)}
+    //     icon={item.weather[0].icon}
+    //     rainChance={Math.round(item.pop * 100)} // pop is 0–1, convert to percentage
+    //     temperature={Math.round(item.main.temp)}
+    //     today={i === 0}
+    //     description={item.weather[0].description} // Optional: show weather description
+    //     realFeel={Math.round(item.main.feels_like)} // Optional: show "feels like" temperature
+    //     humidity={item.main.humidity} // Optional: show humidity percentage
+    //     wind={item.wind.speed} // Optional: show wind speed
+    //     units={selectedUnits} // Pass the selected units to the card for proper display
+    //   />
+//     ))
+//   : // No city selected yet: render 5 empty placeholder cards
+//     Array(5)
+//       .fill(0)
+//       .map((_, i) => (
+//         <WeatherCard
+//           key={i}
+//           day={i === 0 ? "Today" : null}
+//           icon="01d"
+//           rainChance={null}
+//           temperature={null}
+//           today={i === 0}
+//           description={null}
+//           realFeel={null}
+//           humidity={null}
+//           wind={null}
+//           units={selectedUnits}
+//         />
+//       ))}
