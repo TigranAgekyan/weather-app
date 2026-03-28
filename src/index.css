@@ -1,6 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Advent+Pro:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
 
 @layer {
+    * {
+        @apply
+        font-Advent-Pro
+        text-stone-300
+    }
+    
     .glass {
         @apply
         bg-cyan-900/10
@@ -8,4 +15,8 @@
         border-stone-500
         backdrop-blur-xl
     }
+}
+
+@theme {
+    --font-Advent-Pro: 'Advent Pro', sans-serif;
 }
