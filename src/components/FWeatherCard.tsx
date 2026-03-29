@@ -71,8 +71,8 @@ interface WeatherCardProps {
 // Two style variants: today's card is full height and slightly more prominent,
 // the other cards are slightly shorter to create a visual hierarchy
 const styleStates = [
-  "bg-radial from-cyan-100/10 to-cyan-800/10 backdrop-blur-2xl border-stone-500 border h-full", // today
-  "bg-radial from-stone-800/10 to-stone-100/10 backdrop-blur-2xl border-stone-500 border h-[90%]", // other days
+  "bg-radial from-cyan-100/10 to-cyan-800/10 backdrop-blur-2xl border-stone-500 border lg:h-full", // today
+  "bg-radial from-stone-800/10 to-stone-100/10 backdrop-blur-2xl border-stone-500 border lg:h-[90%]", // other days
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -94,38 +94,38 @@ const WeatherCard: FC<WeatherCardProps> = ({
 
   return (
     <div
-      className={`flex flex-col w-[20%] justify-evenly items-center glass-inner rounded-xl p-8 gap-4 drop-shadow-xl ${today ? styleStates[0] : styleStates[1]}`}
+      className={`flex flex-col flex-1 min-w-35 justify-evenly items-center glass-inner rounded-xl p-4 sm:p-6 lg:p-8 gap-2 sm:gap-4 drop-shadow-xl whitespace-nowrap ${today ? styleStates[0] : styleStates[1]}`}
     >
       {/* Weather icon — mapped from OWM icon code */}
-      <WeatherIcon size={48} />
+      <WeatherIcon className="text-[32px] sm:text-[48px]" />
 
       {/*Day Label & Weather Description Wrapper*/}
       <div className="flex flex-col items-center">
         {/* Day label — e.g. "Today", "Monday" */}
-        <span className="text-3xl font-semibold">{day != null ? day:<LoadingAnimation/>}</span>
-        
-        {/*Weather Desciptio — e.g "Light Rain"*/}
-        <span className="text-xl capitalize"> {description != null ? description:<LoadingAnimation/>} </span>
+        <span className="text-xl sm:text-3xl font-semibold">{day != null ? day:<LoadingAnimation/>}</span>
+
+        {/*Weather Description — e.g "Light Rain"*/}
+        <span className="text-sm sm:text-xl capitalize"> {description != null ? description:<LoadingAnimation/>} </span>
       </div>
 
       {/*Temperature & "Feels Like" & Humidity Wrapper*/}
       <div className="flex flex-col items-center">
         {/* Temperature in °C — rounded to a whole number before being passed in */}
-        <span className="text-5xl font-semibold mb-2 p-2 border-b border-stone-500">{temperature != null ? temperature:<LoadingAnimation/>} <span className="font-light text-4xl">{units == ("Metric") ? "C":"F"}°</span> </span>
-        
+        <span className="text-3xl sm:text-5xl font-semibold mb-2 p-2 border-b border-stone-500">{temperature != null ? temperature:<LoadingAnimation/>} <span className="font-light text-2xl sm:text-4xl">{units == ("Metric") ? "C":"F"}°</span> </span>
+
         {/*Humidity*/}
-        <span className="text-xl flex flex-row place-content-center items-center gap-1"> <WiHumidity/> Humidity: {humidity != null ? humidity:<LoadingAnimation/>} </span>
-        
+        <span className="text-sm sm:text-xl flex flex-row place-content-center items-center gap-1"> <WiHumidity/> Humidity: {humidity != null ? humidity:<LoadingAnimation/>} </span>
+
         {/*Real Feel*/}
-        <span className="text-xl flex flex-row place-content-center items-center gap-1"><FaPerson /> Feels Like: {realFeel != null ? realFeel:<LoadingAnimation/>}° </span>
-        
+        <span className="text-sm sm:text-xl flex flex-row place-content-center items-center gap-1"><FaPerson /> Feels Like: {realFeel != null ? realFeel:<LoadingAnimation/>}° </span>
+
         {/* Wind */}
-        <span className="text-xl flex flex-row place-content-center items-center gap-1"> <FaWind/> {wind != null ? wind:<LoadingAnimation/>}  {units == ("Metric") ? "km/h":"m/h"} </span>
+        <span className="text-sm sm:text-xl flex flex-row place-content-center items-center gap-1"> <FaWind/> {wind != null ? wind:<LoadingAnimation/>}  {units == ("Metric") ? "km/h":"m/h"} </span>
       </div>
-      
+
       {/* Chance of rain as a percentage */}
-      <span className="text-xl">Rain: {rainChance != null ? rainChance:<LoadingAnimation/>}%</span>
-      
+      <span className="text-sm sm:text-xl">Rain: {rainChance != null ? rainChance:<LoadingAnimation/>}%</span>
+
     </div>
   );
 };

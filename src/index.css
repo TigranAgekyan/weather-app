@@ -29,6 +29,12 @@
         bg-cyan-900/20
         border-stone-300
     }
+
+    .glass-inner {
+        @apply
+        bg-white/5
+        backdrop-blur-2xl
+    }
 }
 
 @theme {

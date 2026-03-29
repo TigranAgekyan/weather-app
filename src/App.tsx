@@ -130,11 +130,11 @@ const App = () => {
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col w-screen h-screen place-content-center items-center bg-stone-300 p-16 gap-8">
+    <div className="flex flex-col w-screen min-h-screen lg:h-screen place-content-center items-center bg-stone-300 p-4 sm:p-8 lg:p-16 gap-4 sm:gap-8 overflow-x-hidden">
       {/* Background image, positioned behind everything via z-0 */}
-      <img src={RainyBG} className="absolute h-full z-0" />
+      <img src={RainyBG} className="fixed w-full h-full object-cover z-0 inset-0" />
 
-      <div className="z-10 flex flex-col w-full h-full place-content-center items-center gap-8 text-stone-100">
+      <div className="z-10 flex flex-col w-full min-h-screen lg:h-full place-content-center items-center gap-4 sm:gap-8 text-stone-100 py-4 sm:py-0">
         {/* Blackout overlay — shown while the search input is focused */}
         <AnimatePresence>
           {isSearching && (
@@ -149,7 +149,7 @@ const App = () => {
           )}
         </AnimatePresence>
         
-        <div className="flex flex-row gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center w-full sm:w-auto justify-center">
           {/* Search wrapper — `relative` is needed to anchor the dropdown */}
           <div className="relative z-60">
             {/* Search input element */}
@@ -194,47 +194,43 @@ const App = () => {
           
           {/* Temperature Units Selection */}
           <motion.div
-            className="flex flex-row w-[5vw] place-content-center items-center gap-8 text-stone-100 font-semibold glass glass-hover transition-colors rounded-full px-4 py-2"
+            className="relative flex place-content-center items-center text-stone-100 font-semibold glass glass-hover transition-colors rounded-full px-4 py-2 cursor-pointer w-[110px] h-[38px]"
             onClick={() => setSelectedUnits(selectedUnits === "Metric" ? "Imperial" : "Metric")}
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <span className="flex place-content-center items-center">
-              <AnimatePresence>
-                {
-                  selectedUnits === "Metric" ? (
-                    <motion.span
-                      key="C"
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      transition={{ duration: 0.2 }}
-                      className="fixed"
-                    >
-                      Metric
-                    </motion.span>
-                  ) : (
-                    <motion.span
-                      key="F"
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                        transition={{ duration: 0.2 }}
-                        className="fixed"
-                    >
-                      Imperial
-                    </motion.span>
-                  )
-                }
-              </AnimatePresence>
-            </span>
+            <AnimatePresence mode="wait">
+              {selectedUnits === "Metric" ? (
+                <motion.span
+                  key="metric"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute"
+                >
+                  Metric
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="imperial"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute"
+                >
+                  Imperial
+                </motion.span>
+              )}
+            </AnimatePresence>
           </motion.div>
         </div>
 
         {/* Weather cards row */}
         <motion.div
-          className="w-full h-full flex flex-row place-content-center items-center rounded-2xl drop-shadow-2xl glass p-8 gap-8"
+          className="w-full lg:flex-1 flex flex-row flex-wrap place-content-center items-center rounded-2xl drop-shadow-2xl glass p-4 sm:p-8 gap-4 sm:gap-6"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -281,40 +277,3 @@ const App = () => {
 };
 
 export default App;
-
-
-// {weatherData
-//   ? // City selected: render one card per day using real forecast data
-    // getDailyForecasts(weatherData.list).map((item, i) => (
-    //   <WeatherCard
-    //     key={item.dt}
-    //     day={getDayName(item.dt, i === 0)}
-    //     icon={item.weather[0].icon}
-    //     rainChance={Math.round(item.pop * 100)} // pop is 0–1, convert to percentage
-    //     temperature={Math.round(item.main.temp)}
-    //     today={i === 0}
-    //     description={item.weather[0].description} // Optional: show weather description
-    //     realFeel={Math.round(item.main.feels_like)} // Optional: show "feels like" temperature
-    //     humidity={item.main.humidity} // Optional: show humidity percentage
-    //     wind={item.wind.speed} // Optional: show wind speed
-    //     units={selectedUnits} // Pass the selected units to the card for proper display
-    //   />
-//     ))
-//   : // No city selected yet: render 5 empty placeholder cards
-//     Array(5)
-//       .fill(0)
-//       .map((_, i) => (
-//         <WeatherCard
-//           key={i}
-//           day={i === 0 ? "Today" : null}
-//           icon="01d"
-//           rainChance={null}
-//           temperature={null}
-//           today={i === 0}
-//           description={null}
-//           realFeel={null}
-//           humidity={null}
-//           wind={null}
-//           units={selectedUnits}
-//         />
-//       ))}
