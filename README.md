@@ -6,12 +6,6 @@ A clean, responsive weather application built with React, TypeScript, and Tailwi
 
 ---
 
-## Screenshots
-
-> Search a city and get a beautifully animated 5-day forecast at a glance.
-
----
-
 ## Features
 
 - **City Search** — Autocomplete city suggestions powered by the OpenWeatherMap Geocoding API with 500ms debounce to minimize API calls
